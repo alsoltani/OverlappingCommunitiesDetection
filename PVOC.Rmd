@@ -1,0 +1,132 @@
+---
+title: "Network analysis"
+author: "Robin Vogel"
+date: "December 17, 2015"
+output: html_document
+---
+
+```{r, echo=FALSE}
+# setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project")
+```
+
+
+```{r}
+library(igraph)
+
+G <- read.graph("Benchmarks/karate/karate.gml",format = "gml")
+
+plot(G)
+
+```
+
+
+
+#Infomap community detection
+
+
+```{r}
+
+cluster = infomap.community(G)
+
+for(i in 1:length(cluster)){
+  V(G)[V(G) %in% cluster[[i]]]$color = i
+}
+
+for(i in 1:length(cluster)){
+  V(G)[V(G) %in% cluster[[i]]]$color = i
+}
+
+
+plot(G)
+
+
+```
+
+#PVOC procedure
+
+
+```{r}
+
+permanence <- function(G,v){
+  Gp = induced_subgraph(G,V(G)[V(G)$community == V(G)[v]$community])
+  I = sum(neighbors(G,v)$community == V(G)[v]$community) 
+  Emax = which.max(table(neighbors(G,v)$community))
+  D = degree(G)[v] # May be slow
+  c = transitivity(Gp,type = "local")[v] # May be slow
+  if(is.na(c)){
+    c = 0
+  }
+  return(I/(Emax*D) - (1- c))
+}
+
+
+
+VERTEX_REPLICATION  <- function(G,cluster,thre){
+  # G graph
+  # cluster : clustering -> list d'arrays
+  # thre : threshold
+  k = length(unique(V(G)$community))
+  overlap_struct = matrix(data = 0, nrow = k, ncol = length(V(G)), dimnames = NULL)
+  
+  for(i in 1:length(cluster)){
+    V(G)[V(G) %in% cluster[[i]]]$community = i
+  }
+  for (v in V(G)){
+      overlap_struct[V(G)[v]$community,V(G)[v]] = 1
+      if(!Reduce("&", (neighbors(G,v)$community == V(G)[v]$community))){
+        # Boolean that is false if all neighbors are in community
+        O_p = permanence(G,v)
+        O_n = 0
+        for( v_n in neighbors(G,v) ){
+          O_n = O_n + permanence(G,v_n)
+        }
+        Sum_Op = O_p + O_n
+        outside_neighbors = neighbors(G,v)[neighbors(G,v)$community != V(G)[v]$community]
+        for( v_o in outside_neighbors ){
+          C_n = V(G)[v_o]$community
+          C_v = V(G)[v]$community
+          V(G)[v]$community = C_n
+          N_p = permanence(G,v)
+          N_n = 0
+          for( v_n in neighbors(G,v) ){
+            N_n = N_n + permanence(G,v_n)
+          }
+          
+          Sum_Np = N_p + N_n
+          if (abs(Sum_Np - Sum_Op) <= thre){
+            overlap_struct[V(G)[v]$community,V(G)[v]] = 1
+          }else{
+            V(G)[v]$community = C_v
+          }
+        }
+      }
+  }
+  return(overlap_struct)
+}
+
+```
+
+```{r}
+thre = 0.2
+overlap = VERTEX_REPLICATION(G,cluster,thre)
+overlap
+```
+
+```{r}
+V(G)$color = overlap[1,]
+
+plot(G)
+
+V(G)$color = overlap[2,]
+
+plot(G)
+
+V(G)$color = overlap[3,]
+
+plot(G)
+
+
+```
+
+
+
