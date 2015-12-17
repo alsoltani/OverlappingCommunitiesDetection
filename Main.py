@@ -5,32 +5,32 @@
 import networkx as nx
 import scipy as sp
 from scipy.sparse import spdiags, csr_matrix
+import random
+import numpy as np
 
 
 # 1. DER Algorithm.
 # ---------------------
 
-def average_partition_degree(subgraph, nodes=None, weight=None):
+def k_means(matrix, distance, n_clusters):
 
-    """Average weighted degree within partition."
+    n_obs = matrix.shape[0]
+    centroids = random.sample(matrix.tolist(), n_clusters)
+    classes = [0]
+    old_classes = list()
+    n_iter = 0
 
-    Parameters
-    ----------
-    subgraph : graph of partition to compute average degree on.
-        A NetworkX partition
+    while classes != old_classes:
 
-    weight : matrix of weights, accounting for the average of
-        the empirical measures of sequences x that start at i.
-        scipy.sparse Matrix
-    """
-
-    weighted_sum, normalization = csr_matrix((1, weight.shape[1])), sum(subgraph.degree.values())
-
-    for n, deg in subgraph.degree.items():
-
-        weighted_sum += subgraph.degree[n].value() * weight.getrow(n)
-
-    return weighted_sum / normalization
+        old_classes = classes
+        classes = list()
+        for X in matrix.tolist():
+            distances = [distance(X,C) for C in centroids]
+            classes.append(distances.index(min(distances)))
+        for c in range(0, n_clusters):
+            centroids[c] = (matrix[np.array(classes) == c, :].mean(axis=0)).tolist()[0]
+        n_iter += 1
+    return classes, centroids, n_iter
 
 
 def der_algorithm(g, l, k, nodelist=None, weight='weight'):
@@ -80,14 +80,14 @@ def der_algorithm(g, l, k, nodelist=None, weight='weight'):
     # TODO: Select p, q accordingly to the p,q-SBM analytic bounds.
     p, q = 0.25, 0.01
 
-    rpg = nx.random_partition_graph(
-        [g.number_of_nodes() / k for i in range(k)], p, q)
+    # Partition list.
 
-    print rpg
+    partition_list = np.tile(xrange(n/k), k).flatten()
+    np.random.shuffle(partition_list)
 
-    """# DER Algorithm.
+    # DER Algorithm.
 
-    while "THE SETS P DO NOT CHANGE":
+    """while "THE SETS P DO NOT CHANGE":
 
         # 1. For all partitions, construct each mean and store it.
 
@@ -104,7 +104,6 @@ if __name__ == "__main__":
 
     G = nx.karate_club_graph()
     print der_algorithm(G, 10, 2)
-
 
 
 

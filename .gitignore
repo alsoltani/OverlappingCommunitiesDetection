@@ -37,3 +37,9 @@
 ehthumbs.db
 Thumbs.db
 .idea
+
+# My own additions   #
+######################
+*.py
+*.txt
+*.gz
