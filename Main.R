@@ -95,7 +95,7 @@ der_algorithm <- function(g, L, k){
     
   }
   print(t)
-  list(partition[2, ], mu)
+  return(list(partition[2, ], mu))
 }
 
 # Read in edges information.
@@ -116,4 +116,16 @@ igraph_data <- simplify(igraph_data, remove.multiple = TRUE, remove.loops = TRUE
 
 # DER Algorithm.
 test <- der_algorithm(igraph_data, 5, 3)
+
+# Karate Club test
+
+G <- read.graph("Benchmarks/karate/karate.gml",format = "gml")
+test <- der_algorithm(G, 5, 3)
+
+for(i in V(G)){
+  V(G)[i]$color = test[[1]][i]
+  V(G)[i]$community = test[[1]][i]
+}
+
+plot(G)
 
