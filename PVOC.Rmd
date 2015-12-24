@@ -44,15 +44,27 @@ plot(G)
 ```{r}
 
 permanence <- function(G,v){
-  Gp = induced_subgraph(G,V(G)[V(G)$community == V(G)[v]$community])
-  I = sum(neighbors(G,v)$community == V(G)[v]$community) 
-  Emax = which.max(table(neighbors(G,v)$community))
-  D = degree(G)[v] # May be slow
-  c = transitivity(Gp,type = "local")[v] # May be slow
-  if(is.na(c)){
-    c = 0
+  # Need to keep the former id that will be erased by the induced_graph operation.
+  if( Reduce("&",neighbors(G,v)$community == V(G)[v]$community) ){
+    c = transitivity(G,type = "local",vids = V(G)[v])
+    if(is.na(c)){
+      c = 0
+    }
+    return(c)
+  }else{
+    V(G)$id = V(G)
+    # Get the induced subgraph by keeping all nodes in the same community as v
+    Gp = induced_subgraph(G,which(V(G)$community == V(G)[v]$community)) # V(G)[v] community
+    # Count the number of neighbors of v in the same community
+    I = sum(neighbors(G,v)$community == V(G)[v]$community) 
+    Emax = which.max(table(neighbors(G,v)$community[neighbors(G,v)$community != V(G)[v]$community] ))
+    D = degree(G, v= v) 
+    c = transitivity(Gp,type = "local",vids = which(V(Gp)$id == v))
+    if(is.na(c)){
+      c = 0
+    }
+    return(I/(Emax*D) - (1- c))
   }
-  return(I/(Emax*D) - (1- c))
 }
 
 
@@ -68,6 +80,7 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
     V(G)[V(G) %in% cluster[[i]]]$community = i
   }
   for (v in V(G)){
+    # Whebn i iterate on the vertices, i don't keep the parameter and therefore need to write V(G)[v]
       overlap_struct[V(G)[v]$community,V(G)[v]] = 1
       if(!Reduce("&", (neighbors(G,v)$community == V(G)[v]$community))){
         # Boolean that is false if all neighbors are in community
@@ -87,7 +100,6 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
           for( v_n in neighbors(G,v) ){
             N_n = N_n + permanence(G,v_n)
           }
-          
           Sum_Np = N_p + N_n
           if (abs(Sum_Np - Sum_Op) <= thre){
             overlap_struct[V(G)[v]$community,V(G)[v]] = 1
@@ -103,7 +115,7 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
 ```
 
 ```{r}
-thre = 0.2
+thre = 0.4
 overlap = VERTEX_REPLICATION(G,cluster,thre)
 overlap
 ```
