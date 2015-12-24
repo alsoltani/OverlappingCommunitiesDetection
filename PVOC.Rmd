@@ -30,12 +30,8 @@ cluster = infomap.community(G)
 
 for(i in 1:length(cluster)){
   V(G)[V(G) %in% cluster[[i]]]$color = i
+  V(G)[V(G) %in% cluster[[i]]]$community = i
 }
-
-for(i in 1:length(cluster)){
-  V(G)[V(G) %in% cluster[[i]]]$color = i
-}
-
 
 plot(G)
 
