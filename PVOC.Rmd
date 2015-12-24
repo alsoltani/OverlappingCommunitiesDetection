@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r, echo=FALSE}
-setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project")
+setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project/OverlappingCommunitiesDetection/")
 ```
 
 

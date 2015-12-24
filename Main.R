@@ -5,7 +5,7 @@
 library(expm)
 library(igraph)
 library(Matrix)
-setwd("C:/Users/Clément/Desktop/Statistical Analysis of Network Data/Projet")
+setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project/OverlappingCommunitiesDetection/")
 
 # 1. DER Algorithm.
 # ---------------------
