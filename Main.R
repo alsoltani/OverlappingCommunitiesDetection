@@ -5,7 +5,8 @@
 library(expm)
 library(igraph)
 library(Matrix)
-setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project/OverlappingCommunitiesDetection/")
+#setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project/OverlappingCommunitiesDetection/")
+setwd("/Users/alain/Documents/ENSAE/Statistical\ Analysis\ of\ Network\ Data/Project")
 
 # 1. DER Algorithm.
 # ---------------------
@@ -172,7 +173,7 @@ igraph_data <- simplify(igraph_data, remove.multiple = T, remove.loops = T)
 
 # DER Algorithm.
 test <- der_algorithm(igraph_data, 5, 3)
-der_overlapping(igraph_data, 5, 3)
+test_overlapping <- der_overlapping(igraph_data, 5, 3)
 
 # Karate Club test
 G <- read.graph("Benchmarks/karate/karate.gml", format = "gml")
