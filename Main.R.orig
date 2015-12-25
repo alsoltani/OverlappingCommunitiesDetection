@@ -11,10 +11,13 @@ setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project/Overl
 # ---------------------
 
 divergence <- function(nu, mu){
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+=======
   
   # Divergence function.
   # ::::::::::::::::::::
   
+>>>>>>> Added DER extension to overlapping communities
   idx_mu = which(mu != 0)
   if(length(idx_mu)==0){
     sum(nu[idx_mu] * log(mu[idx_mu]))
@@ -27,6 +30,10 @@ divergence <- function(nu, mu){
       sum(nu[idx_mu] * log(mu[idx_mu]))
     }
   }
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+
+=======
+>>>>>>> Added DER extension to overlapping communities
 }
 
 der_algorithm <- function(g, L, k){
@@ -64,11 +71,27 @@ der_algorithm <- function(g, L, k){
   partition = matrix(0, nrow=2, ncol=n)
   partition[1, ] = 0
   partition[2, ] = sample(c(rep(seq(k),  n %/% k), seq(n %% k)))
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+  
+  #print(c(partition[1, ] != partition[2, ]))
+  
+=======
+>>>>>>> Added DER extension to overlapping communities
   
   # mu_s : distribution of the random walk started from pi_s.
   mu = matrix(0, nrow = k, ncol = n)
   t = 0
-
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+  # While the two partition differs
+  while(Reduce("|", partition[1, ] != partition[2, ])){
+    t = t+1
+    # Step 1.
+    for(i in 1:k){
+      s = which(partition[2, ] == i)
+      mu[i,] = apply(w[s, ], 2, function(r) {weighted.mean(r, w=degree(g)[s])})
+      }
+=======
+  
   # While the two partition differs :
   while(Reduce("|", partition[1, ] != partition[2, ])){
     t = t+1
@@ -79,6 +102,7 @@ der_algorithm <- function(g, L, k){
       mu[i,] = apply(w[s, ], 2, function(r) {weighted.mean(r, w=degree(g)[s])})
     }
     
+>>>>>>> Added DER extension to overlapping communities
     # Update the old partition.
     partition[1, ] = partition[2, ]
     
@@ -86,8 +110,11 @@ der_algorithm <- function(g, L, k){
     divergence_matrix = matrix(0, nrow = n, ncol = k)
     for (i in 1:n){
       for(j in 1:k){
-
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+        divergence_matrix[i,j] = divergence(w[i,],mu[j,])
+=======
         divergence_matrix[i,j] = divergence(w[i, ], mu[j, ])
+>>>>>>> Added DER extension to overlapping communities
       }
       #divergence_matrix[i, ] = apply(mu, 1, function(r) {divergence(w[i, ], r)})
     }
@@ -99,6 +126,14 @@ der_algorithm <- function(g, L, k){
     for (i in 1:n){
       partition[2, i] = which(divergence_matrix[i, ] == max(divergence_matrix[i, ]))[1]
     }
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+    print(t)
+    #print(c(partition[1, ] != partition[2, ]))
+    
+  }
+  print(t)
+  return(list(partition[2, ], mu))
+=======
     cat("DER Algorithm : Iteration", t, "\n")
   }
   return(list(partition[2, ], mu))
@@ -149,6 +184,7 @@ der_overlapping <- function(g, L, k){
     overlapping_communities[t, indexes] = t
   }
   return(overlapping_communities)
+>>>>>>> Added DER extension to overlapping communities
 }
 
 # 3. Test on Flickr data.
@@ -172,15 +208,27 @@ igraph_data <- simplify(igraph_data, remove.multiple = T, remove.loops = T)
 
 # DER Algorithm.
 test <- der_algorithm(igraph_data, 5, 3)
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+
+# Karate Club test
+
+G <- read.graph("Benchmarks/karate/karate.gml",format = "gml")
+=======
 der_overlapping(igraph_data, 5, 3)
 
 # Karate Club test
 G <- read.graph("Benchmarks/karate/karate.gml", format = "gml")
+>>>>>>> Added DER extension to overlapping communities
 test <- der_algorithm(G, 5, 3)
 
 for(i in V(G)){
   V(G)[i]$color = test[[1]][i]
   V(G)[i]$community = test[[1]][i]
 }
+<<<<<<< 14c46dcb250c3c947e1dc6bec278681ee4080354
+
+plot(G)
+=======
+>>>>>>> Added DER extension to overlapping communities
 
 plot(G)

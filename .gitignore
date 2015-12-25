@@ -43,3 +43,5 @@ Thumbs.db
 *.py
 *.txt
 *.gz
+.RData
+.Rhistory
