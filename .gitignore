@@ -40,7 +40,7 @@ Thumbs.db
 
 # My own additions   #
 ######################
-*.py
+#*.py
 *.txt
 *.gz
 .RData
