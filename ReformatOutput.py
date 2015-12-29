@@ -8,7 +8,7 @@ A short Pandas script to reformat the list of the nodes and their membership.
 
 # Find all files.
 
-path = os.getcwd() + "/Data/"
+path = os.getcwd() + "/Data/Networks/"
 
 for root, dirs, files in os.walk(path):
     for name in files:
@@ -36,4 +36,4 @@ for root, dirs, files in os.walk(path):
 
             # Save.
             file_prefix = root.split("/")[-1]
-            grouped_A.to_csv("Memberships/" + file_prefix + ".dat", index=False)
+            grouped_A.to_csv("Data/Memberships/" + file_prefix + ".dat", index=False)

@@ -154,12 +154,12 @@ der_overlapping <- function(g, L, k){
   return(overlapping_communities)
 }
 
-# 3. Test on Flickr data.
+# 3. Test on artificial data.
 # ---------------------
 
 # Read in edges information.
-edgelist = read.csv("./Amazon_data/com-amazon.ungraph.txt", sep = "\t", skip = 4)[, 1:2]
-                    #, nrows = 1000
+network_files = list.files(pattern = "network.dat", recursive = T)
+edgelist = read.csv(network_files[1], sep = "\t", header = F)[, 1:2]
 colnames(edgelist) = c("Node Id", "Node Id")
 
 # Because the vertex IDs in this dataset are numbers, 
@@ -175,14 +175,10 @@ igraph_data = graph.edgelist(edgelist[, 1:2], directed = F)
 igraph_data <- simplify(igraph_data, remove.multiple = T, remove.loops = T)
 
 # DER Algorithm.
-test <- der_algorithm(igraph_data, 5, 3)
-test_overlapping <- der_overlapping(igraph_data, 5, 3)
+test <- der_algorithm(igraph_data, 5, 15)
+test_overlapping <- der_overlapping(igraph_data, 5, 15)
 
-###########################################################################
-# Karate Club test
-G <- read.graph("Benchmarks/karate/karate.gml", format = "gml")
-test <- der_algorithm(G, 5, 3)
-
+# Plot results.
 for(i in V(G)){
   V(G)[i]$color = test[[1]][i]
   V(G)[i]$community = test[[1]][i]
