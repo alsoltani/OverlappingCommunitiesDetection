@@ -43,13 +43,10 @@ der_algorithm <- function(g, L, k){
   n = dim(a)[2]
   
   # di : inverse degree matrix.
-<<<<<<< HEAD
   #di = diag(1 / degree(g))
   di = .sparseDiagonal(n = n,x = 1/degree(g)) # no NAs
-=======
-  di = diag(1 / degree(g))
   
->>>>>>> 37d39e2dda20f5b6726b84adb20ad6960b19ccf0
+  
   # t : lists of transition matrices, from 1 to l.
   t = Matrix(di %*% a, sparse = T)
   w = Matrix(0, nrow=n, ncol=n, sparse = T)
