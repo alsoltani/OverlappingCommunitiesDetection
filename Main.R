@@ -34,12 +34,12 @@ der_algorithm <- function(g, L, k){
   n = dim(a)[2]
   
   # di : inverse degree matrix.
-  di = diag(1 / degree(g))
-
+  #di = diag(1 / degree(g))
+  di = .sparseDiagonal(n = n,x = 1/degree(g)) # no NAs
   # t : lists of transition matrices, from 1 to l.
   t = Matrix(di %*% a, sparse = T)
   w = Matrix(0, nrow=n, ncol=n, sparse = T)
-  temp = Matrix(diag(n), sparse = T)
+  temp = Matrix(.sparseDiagonal(n), sparse = T)
   
   for (i in 1:L){
     temp = temp %*% t
@@ -99,7 +99,8 @@ der_algorithm <- function(g, L, k){
 }
 
 # Read in edges information.
-edgelist = read.csv("./flickrEdges.txt", sep = " ", skip = 3, nrows = 1000)[, 1:2]
+edgelist = read.csv("./Amazon_data/com-amazon.ungraph.txt", sep = "\t", skip = 4)[, 1:2]
+                    #, nrows = 1000
 colnames(edgelist) = c("Node Id", "Node Id")
 
 # Because the vertex IDs in this dataset are numbers, 
@@ -117,6 +118,7 @@ igraph_data <- simplify(igraph_data, remove.multiple = TRUE, remove.loops = TRUE
 # DER Algorithm.
 test <- der_algorithm(igraph_data, 5, 3)
 
+###########################################################################
 # Karate Club test
 
 G <- read.graph("Benchmarks/karate/karate.gml",format = "gml")

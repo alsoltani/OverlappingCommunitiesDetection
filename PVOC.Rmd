@@ -44,7 +44,6 @@ plot(G)
 ```{r}
 
 permanence <- function(G,v){
-  # Need to keep the former id that will be erased by the induced_graph operation.
   if( Reduce("&",neighbors(G,v)$community == V(G)[v]$community) ){
     c = transitivity(G,type = "local",vids = V(G)[v])
     if(is.na(c)){
@@ -52,6 +51,7 @@ permanence <- function(G,v){
     }
     return(c)
   }else{
+    # We need to keep the former id that will be erased by the induced_graph operation.
     V(G)$id = V(G)
     # Get the induced subgraph by keeping all nodes in the same community as v
     Gp = induced_subgraph(G,which(V(G)$community == V(G)[v]$community)) # V(G)[v] community
@@ -70,6 +70,7 @@ permanence <- function(G,v){
 
 
 VERTEX_REPLICATION  <- function(G,cluster,thre){
+  # Strict implementation of the pseudo-code in the paper
   # G graph
   # cluster : clustering -> list d'arrays
   # thre : threshold
@@ -80,7 +81,7 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
     V(G)[V(G) %in% cluster[[i]]]$community = i
   }
   for (v in V(G)){
-    # Whebn i iterate on the vertices, i don't keep the parameter and therefore need to write V(G)[v]
+    # When i iterate on the vertices, i don't keep the parameter and therefore need to write V(G)[v]
       overlap_struct[V(G)[v]$community,V(G)[v]] = 1
       if(!Reduce("&", (neighbors(G,v)$community == V(G)[v]$community))){
         # Boolean that is false if all neighbors are in community
