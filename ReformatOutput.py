@@ -36,4 +36,4 @@ for root, dirs, files in os.walk(path):
 
             # Save.
             file_prefix = root.split("/")[-1]
-            grouped_A.to_csv("Memberships/" + file_prefix + ".txt", index=False)
+            grouped_A.to_csv("Memberships/" + file_prefix + ".dat", index=False)
