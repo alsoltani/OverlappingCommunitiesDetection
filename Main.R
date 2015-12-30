@@ -71,7 +71,7 @@ der_algorithm <- function(g, L, k){
   # mu_s : distribution of the random walk started from pi_s.
   mu = matrix(0, nrow = k, ncol = n)
   t = 0
-
+  
   # While the two partition differs :
   while(Reduce("|", partition[1, ] != partition[2, ])){
     t = t+1
@@ -89,7 +89,7 @@ der_algorithm <- function(g, L, k){
     divergence_matrix = matrix(0, nrow = n, ncol = k)
     for (i in 1:n){
       for(j in 1:k){
-
+        
         divergence_matrix[i,j] = divergence(w[i, ], mu[j, ],)
       }
       #divergence_matrix[i, ] = apply(mu, 1, function(r) {divergence(w[i, ], r)})
@@ -168,7 +168,7 @@ n_communities = max(as.numeric(
   unlist(lapply(communities, 
                 function(x) {
                   unlist(strsplit(toString(x), " "))}
-                ))))
+  ))))
 
 # Read network file.
 network_files = list.files(pattern = "network.dat", recursive = T)
