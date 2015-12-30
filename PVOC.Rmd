@@ -141,11 +141,9 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
           C_v = G_v$community
           V(G)[G_v]$community = C_n
           N_p = permanence(G,v)
-          print(paste0("permanence v ",N_p))
           N_n = sum(sapply(neighbors_v,function(x) permanence(G,x)))
           Sum_Np = N_p + N_n
-          print(paste0("Sum_Np ",Sum_Np))
-          print(paste0("Sum_Op ",Sum_Op))
+          print(paste0("Value of the difference : ",abs(Sum_Np - Sum_Op) ))
           if (abs(Sum_Np - Sum_Op) <= thre){
             overlap_struct[C_n,G_v] = 1
           }else{
@@ -181,7 +179,7 @@ for(i in 1:n_dim){
 }
 
 network = network_files[1]
-file_name = "test_louvain_normal_threshold_2"
+file_name = "test_louvain_no_overlap"
 write.table(test_matrice, paste(file_name, ".dat", sep=""), na="", col.names = F, row.names = F)
 
 ```
@@ -192,9 +190,19 @@ thre = 0.05
 # lance a 16h05
 
 overlap = VERTEX_REPLICATION(G,cluster,thre)
+
+time_init = proc.time()["elapsed"]
 overlap2 = VERTEX_REPLICATION(G,cluster2,thre)
+print(paste0("Temps écoulé : ", proc.time()["elapsed"] - time_init))
 
 overlap
+
+test_matrice <- matrix(NA, nrow=8, ncol=100)
+for(i in 1:8){
+    if(length(cluster2[[i]]) != 0){
+        test_matrice[i,1:length(cluster2[[i]])] <- as.numeric(cluster2[[i]])
+    }
+}
 
 ```
 
