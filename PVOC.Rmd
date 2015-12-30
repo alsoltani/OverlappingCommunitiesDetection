@@ -146,8 +146,9 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
           print(paste0("Value of the difference : ",abs(Sum_Np - Sum_Op) ))
           if (abs(Sum_Np - Sum_Op) <= thre){
             overlap_struct[C_n,G_v] = 1
+            V(G)[G_v]$community = C_v
           }else{
-            G_v$community = C_v
+            V(G)[G_v]$community = C_v
           }
         }
       }
@@ -218,6 +219,86 @@ plot(G)
 V(G)$color = overlap[3,]
 
 plot(G)
+
+
+```
+
+
+```{r}
+
+
+transitivite <- function(G,v){
+  c = transitivity(G,type = "local", vids = v)
+  if(is.na(c)){
+    c = 0
+  }else{
+    return(c)
+  }
+}
+
+permanence <- function(G,v,communities){
+  if( Reduce("&",neighbors(G,v)$community == V(G)[v]$community) ){
+    return(transitivite(G,v))
+  }else{
+    # We need to keep the former id that will be erased by the induced_graph operation.
+    V(G)$id = V(G)
+    # Get the induced subgraph by keeping all nodes in the same community as v
+    Gp = induced_subgraph(G,which(V(G)$community == V(G)[v]$community)) # V(G)[v] community
+    # Count the number of neighbors of v in the same community
+    I = sum(neighbors(G,v)$community == V(G)[v]$community) 
+    Emax = which.max(table(neighbors(G,v)$community[neighbors(G,v)$community != V(G)[v]$community] ))
+    D = degree(G, v= v) 
+    c = transitivite(Gp,which(V(Gp)$id == v))
+    return(I/(Emax*D) - (1- c))
+  }
+}
+
+
+VERTEX_REPLICATION  <- function(G,cluster,thre){
+  # Strict implementation of the pseudo-code in the paper
+  # G graph
+  # cluster : clustering -> list d'arrays
+  # thre : threshold
+  k = length(unique(V(G)$community))
+  overlap_struct = matrix(data = 0, nrow = k, ncol = length(V(G)), dimnames = NULL)
+  
+  for (v in V(G)){
+    G_v = V(G)[v]
+    overlap_struct[ G_v$community, G_v ] = 1
+  }
+  n_vertice = 0
+  for (v in V(G)){
+    # When i iterate on the vertices, i don't keep the parameter and therefore need to write V(G)[v]
+    print(n_vertice) 
+    G_v = V(G)[v]
+    neighbors_v = neighbors(G,v)
+      if(!Reduce("&", (neighbors_v$community == G_v$community))){
+        # Boolean that is false if all neighbors are in community
+        O_p = permanence(G,v)
+        O_n = sum(sapply(neighbors_v,function(x) permanence(G,x)))
+        Sum_Op = O_p + O_n
+        outside_neighbors = neighbors_v[neighbors_v$community != G_v$community]
+        for( v_o in outside_neighbors ){
+          G_v_o = V(G)[v_o]
+          C_n = G_v_o$community
+          C_v = G_v$community
+          V(G)[G_v]$community = C_n
+          N_p = permanence(G,v)
+          N_n = sum(sapply(neighbors_v,function(x) permanence(G,x)))
+          Sum_Np = N_p + N_n
+          print(paste0("Value of the difference : ",abs(Sum_Np - Sum_Op) ))
+          if (abs(Sum_Np - Sum_Op) <= thre){
+            overlap_struct[C_n,G_v] = 1
+          }else{
+            V(G)[G_v]$community = C_v
+          }
+        }
+      }
+    n_vertice = n_vertice + 1
+  }
+  return(overlap_struct)
+}
+
 
 
 ```
