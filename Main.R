@@ -110,7 +110,7 @@ der_algorithm <- function(g, L, k){
 # 2. DER Algorithm for Overlapping Communities.
 # ---------------------
 
-der_overlapping <- function(g, L, k){
+der_overlapping <- function(der_algorithm, g, k){
   
   # Modified DER Algorithm, for overlapping communities' detection.
   # ::::::::::::::::::::
@@ -120,7 +120,7 @@ der_overlapping <- function(g, L, k){
   n = vcount(g)
   
   # Output of the classical DER algorithm : partitions, mu.
-  res = der_algorithm(g, L, k)
+  res = der_algorithm
   partition = res[1][[1]]
   mu = res[2][[1]]
   
@@ -144,22 +144,36 @@ der_overlapping <- function(g, L, k){
   }
   
   # Create overlapping communities.
-  overlapping_communities = matrix(F, nrow=k, ncol=n)
+  overlapping_communities = matrix(NA, nrow=k, ncol=n)
   for (t in 1:k){
     
     # Indexes verifiying the criterion.
     indexes = which(m[, t] >= 0.5 * ms)
-    overlapping_communities[t, indexes] = t
+    overlapping_communities[t, indexes] = indexes
   }
+  
   return(overlapping_communities)
 }
 
 # 3. Test on artificial data.
 # ---------------------
 
-# Read in edges information.
+# Read community file.
+community_files = list.files(pattern = "community.dat", recursive = T)
+community = community_files[1]
+communities = read.csv(community, sep = "\t", header = F)[, 2]
+
+# Find the number of communities.
+n_communities = max(as.numeric(
+  unlist(lapply(communities, 
+                function(x) {
+                  unlist(strsplit(toString(x), " "))}
+                ))))
+
+# Read network file.
 network_files = list.files(pattern = "network.dat", recursive = T)
-edgelist = read.csv(network_files[1], sep = "\t", header = F)[, 1:2]
+network = network_files[1]
+edgelist = read.csv(network, sep = "\t", header = F)[, 1:2]
 colnames(edgelist) = c("Node Id", "Node Id")
 
 # Because the vertex IDs in this dataset are numbers, 
@@ -174,14 +188,20 @@ igraph_data = graph.edgelist(edgelist[, 1:2], directed = F)
 # Simplify to remove duplications and from-self-to-self loops
 igraph_data <- simplify(igraph_data, remove.multiple = T, remove.loops = T)
 
-# DER Algorithm.
-test <- der_algorithm(igraph_data, 5, 15)
-test_overlapping <- der_overlapping(igraph_data, 5, 15)
+# DER Algorithms.
+test <- der_algorithm(igraph_data, 5, n_communities)
+test_overlapping <- der_overlapping(test, igraph_data, n_communities)
+
+# Save results.
+network = network_files[1]
+file_name = unlist(strsplit(network, "[/]"))[3]
+write.table(test_overlapping, paste("Data/DERMemberships/", file_name, ".dat", sep=""), 
+            na="", col.names = F, row.names = F)
 
 # Plot results.
-for(i in V(G)){
-  V(G)[i]$color = test[[1]][i]
-  V(G)[i]$community = test[[1]][i]
+for(i in V(igraph_data)){
+  V(igraph_data)[i]$color = test[[1]][i]
+  V(igraph_data)[i]$community = test[[1]][i]
 }
 
-plot(G)
+plot(igraph_data)
