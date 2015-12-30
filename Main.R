@@ -11,18 +11,18 @@ setwd("/Users/alain/Documents/ENSAE/Statistical\ Analysis\ of\ Network\ Data/Pro
 # 1. DER Algorithm.
 # ---------------------
 
-divergence <- function(nu, mu){
+divergence <- function(nu, mu, n){
   
   # Divergence function.
   # ::::::::::::::::::::
   
   idx_mu = which(mu != 0)
-  if(length(idx_mu)==0){
+  if(length(idx_mu) == n){
     sum(nu[idx_mu] * log(mu[idx_mu]))
   }
   else{
     if(sum(nu[-idx_mu]) != 0){
-      -9000
+      -10000
     }
     else{
       sum(nu[idx_mu] * log(mu[idx_mu]))
@@ -44,7 +44,7 @@ der_algorithm <- function(g, L, k){
   
   # di : inverse degree matrix.
   #di = diag(1 / degree(g))
-  di = .sparseDiagonal(n = n,x = 1/degree(g)) # no NAs
+  di = .sparseDiagonal(n = n, x = 1 / degree(g)) # no NAs
   
   
   # t : lists of transition matrices, from 1 to l.
@@ -90,7 +90,7 @@ der_algorithm <- function(g, L, k){
     for (i in 1:n){
       for(j in 1:k){
 
-        divergence_matrix[i,j] = divergence(w[i, ], mu[j, ])
+        divergence_matrix[i,j] = divergence(w[i, ], mu[j, ],)
       }
       #divergence_matrix[i, ] = apply(mu, 1, function(r) {divergence(w[i, ], r)})
     }
@@ -125,13 +125,13 @@ der_overlapping <- function(der_algorithm, g, k){
   mu = res[2][[1]]
   
   # pi : stationary measure of the random walk.
-  pi = (1 / degree(g)) / norm(data.matrix(1 / degree(g)), "1")
+  pi = degree(g) / norm(data.matrix(degree(g)), "1")
   
   # m : (n, k) matrix of probabilities that the walk started at P_s, given that it finished in i.
   m = matrix(F, nrow=n, ncol=k)
   for(j in 1:k){
     s = which(partition == j)
-    m[, j] = mu[j, ] / pi * mean(pi[s])
+    m[, j] = mu[j, ] / pi * sum(pi[s])
   }
   
   # For each i in V, find the most likely community given i and the associated value 1/2 * m_i[s_i].
