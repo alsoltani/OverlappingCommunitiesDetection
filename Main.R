@@ -90,7 +90,7 @@ der_algorithm <- function(g, L, k){
     for (i in 1:n){
       for(j in 1:k){
         
-        divergence_matrix[i,j] = divergence(w[i, ], mu[j, ],)
+        divergence_matrix[i,j] = divergence(w[i, ], mu[j, ], n)
       }
       #divergence_matrix[i, ] = apply(mu, 1, function(r) {divergence(w[i, ], r)})
     }
