@@ -17,6 +17,35 @@ G <- read.graph("Benchmarks/karate/karate.gml",format = "gml")
 
 plot(G)
 
+
+# setwd("/home/Saved_Documents/Documents/Cours/M2_ENSAE/Network_stat/project/OverlappingCommunitiesDetection//")
+# 
+# G_tab <- read.csv("Data/Networks/N1000_K20_MAXK50_MU01/community.dat",sep = "\t")
+# 
+# G <- graph.data.frame(G_tab, directed=F)
+# 
+# components(G)
+
+
+# Read community file.
+network_files = list.files(pattern = "network.dat", recursive = T)
+network = network_files[length(network_files)-1]
+edgelist = read.csv(network, sep = "\t", header = F)[, 1:2]
+colnames(edgelist) = c("Node Id", "Node Id")
+
+# Because the vertex IDs in this dataset are numbers, 
+# we make sure igraph knows these should be treated as characters. 
+edgelist[, 1] = as.character(edgelist[, 1]) 
+edgelist[, 2] = as.character(edgelist[, 2])
+
+# Igraph needs the edgelist to be in matrix format.
+edgelist = as.matrix(edgelist)
+igraph_data = graph.edgelist(edgelist[, 1:2], directed = F)
+
+# Simplify to remove duplications and from-self-to-self loops
+igraph_data <- simplify(igraph_data, remove.multiple = T, remove.loops = T)
+
+
 ```
 
 
@@ -26,7 +55,19 @@ plot(G)
 
 ```{r}
 
+G = igraph_data
+
 cluster = infomap.community(G)
+cluster2 = cluster_louvain(G, weights = NULL)
+
+names(cluster2$groupŝ)
+
+for(i in 1:length(cluster2)){
+  V(G)[V(G) %in% cluster2[[i]]]$color = i
+  V(G)[V(G) %in% cluster2[[i]]]$community = i
+}
+
+
 
 for(i in 1:length(cluster)){
   V(G)[V(G) %in% cluster[[i]]]$color = i
@@ -43,13 +84,18 @@ plot(G)
 
 ```{r}
 
+transitivite <- function(G,v){
+  c = transitivity(G,type = "local", vids = v)
+  if(is.na(c)){
+    c = 0
+  }else{
+    return(c)
+  }
+}
+
 permanence <- function(G,v){
   if( Reduce("&",neighbors(G,v)$community == V(G)[v]$community) ){
-    c = transitivity(G,type = "local",vids = V(G)[v])
-    if(is.na(c)){
-      c = 0
-    }
-    return(c)
+    return(transitivite(G,v))
   }else{
     # We need to keep the former id that will be erased by the induced_graph operation.
     V(G)$id = V(G)
@@ -59,14 +105,10 @@ permanence <- function(G,v){
     I = sum(neighbors(G,v)$community == V(G)[v]$community) 
     Emax = which.max(table(neighbors(G,v)$community[neighbors(G,v)$community != V(G)[v]$community] ))
     D = degree(G, v= v) 
-    c = transitivity(Gp,type = "local",vids = which(V(Gp)$id == v))
-    if(is.na(c)){
-      c = 0
-    }
+    c = transitivite(Gp,which(V(Gp)$id == v))
     return(I/(Emax*D) - (1- c))
   }
 }
-
 
 
 VERTEX_REPLICATION  <- function(G,cluster,thre){
@@ -80,45 +122,80 @@ VERTEX_REPLICATION  <- function(G,cluster,thre){
   for(i in 1:length(cluster)){
     V(G)[V(G) %in% cluster[[i]]]$community = i
   }
+  n_vertice = 0
   for (v in V(G)){
     # When i iterate on the vertices, i don't keep the parameter and therefore need to write V(G)[v]
-      overlap_struct[V(G)[v]$community,V(G)[v]] = 1
-      if(!Reduce("&", (neighbors(G,v)$community == V(G)[v]$community))){
+    print(n_vertice) 
+    G_v = V(G)[v]
+    neighbors_v = neighbors(G,v)
+    overlap_struct[ G_v$community, G_v ] = 1
+      if(!Reduce("&", (neighbors_v$community == G_v$community))){
         # Boolean that is false if all neighbors are in community
         O_p = permanence(G,v)
-        O_n = 0
-        for( v_n in neighbors(G,v) ){
-          O_n = O_n + permanence(G,v_n)
-        }
+        O_n = sum(sapply(neighbors_v,function(x) permanence(G,x)))
         Sum_Op = O_p + O_n
-        outside_neighbors = neighbors(G,v)[neighbors(G,v)$community != V(G)[v]$community]
+        outside_neighbors = neighbors_v[neighbors_v$community != G_v$community]
         for( v_o in outside_neighbors ){
-          C_n = V(G)[v_o]$community
-          C_v = V(G)[v]$community
-          V(G)[v]$community = C_n
+          G_v_o = V(G)[v_o]
+          C_n = G_v_o$community
+          C_v = G_v$community
+          V(G)[G_v]$community = C_n
           N_p = permanence(G,v)
-          N_n = 0
-          for( v_n in neighbors(G,v) ){
-            N_n = N_n + permanence(G,v_n)
-          }
+          print(paste0("permanence v ",N_p))
+          N_n = sum(sapply(neighbors_v,function(x) permanence(G,x)))
           Sum_Np = N_p + N_n
+          print(paste0("Sum_Np ",Sum_Np))
+          print(paste0("Sum_Op ",Sum_Op))
           if (abs(Sum_Np - Sum_Op) <= thre){
-            overlap_struct[V(G)[v]$community,V(G)[v]] = 1
+            overlap_struct[C_n,G_v] = 1
           }else{
-            V(G)[v]$community = C_v
+            G_v$community = C_v
           }
         }
       }
+    n_vertice = n_vertice + 1
   }
   return(overlap_struct)
 }
 
+n = 100
+
+matrice = overlap2
+n_dim = dim(matrice)[1]
+k = n_dim
+
+for(j in 1:n){
+    matrice[,j] = j * matrice[,j]
+}
+
+test_liste = list()
+for (i in 1:n_dim){
+  test_liste[[i]] <- which(matrice[i,] != 0)
+}
+
+test_matrice <- matrix(NA, nrow=k, ncol=n)
+for(i in 1:n_dim){
+  if(length(test_liste[[i]]) != 0){
+    test_matrice[i,1:length(test_liste[[i]])] <- test_liste[[i]]
+  }
+}
+
+network = network_files[1]
+file_name = "test_louvain_normal_threshold_2"
+write.table(test_matrice, paste(file_name, ".dat", sep=""), na="", col.names = F, row.names = F)
+
 ```
 
 ```{r}
-thre = 0.4
+thre = 0.05
+
+# lance a 16h05
+
 overlap = VERTEX_REPLICATION(G,cluster,thre)
+overlap2 = VERTEX_REPLICATION(G,cluster2,thre)
+
 overlap
+
 ```
 
 ```{r}
