@@ -10,13 +10,25 @@ A short Pandas script to reformat the list of the nodes and their membership.
 
 path = os.getcwd() + "/Data/DERMemberships/"
 
-# Read file.
-with open(path + "N1000_K20_MAXK50_MU01.dat", "rb") as f:
-    data = map(lambda r: r.split(" "), f.readlines())
+for root, dirs, files in os.walk(path):
 
-data = map(lambda r: [i for i in r if len(i) > 1], data)
-data = map(lambda r: " ".join(r), data)
+    print root, dirs, files
 
-with open(path + "N1000_K20_MAXK50_MU01_Reformatted.dat", "wb") as f:
-    for item in data:
-        f.write("%s\n" % item)
+    for name in files:
+        if "N100_" in name and "Formatted" not in name:
+
+            # Read file.
+            with open(os.path.join(root, name), "rb") as f:
+                data = map(lambda r: r.split(" "), f.readlines())
+
+            data = map(lambda r: [i for i in r if len(i) > 1], data)
+            data = map(lambda r: " ".join(r).rstrip(), data)
+
+            print data
+
+            file_prefix = name.split(".")[0]
+            print file_prefix
+
+            with open("Data/DERMemberships/" + file_prefix + "_Formatted.dat", "wb") as f:
+                for item in data:
+                    f.write("%s\n" % item)

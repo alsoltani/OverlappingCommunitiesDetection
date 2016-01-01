@@ -37,15 +37,22 @@ der_algorithm <- function(g, L, k){
   # Returns a (1, n) matrix, containing communities for all vertices,
   # and a (k, n) containing mu's for each community.
   
-  # a : adjacency matrix.
-  a = get.adjacency(g, sparse=T)
-  m = dim(a)[1]
+  # unordered_a : unordered adjacency matrix.
+  # When forming the adjacency matrix, the indexes do not match the 
+  # vertices' names. Hence the need for an permutation.
+  unordered_a = get.adjacency(g, sparse=T)
+
+  permutation_v <- as.numeric(V(g)$name)
+  p = as(permutation_v, 'pMatrix')  # Permutation matrix
+  inv_p = as(invPerm(permutation_v), 'pMatrix')
+  
+  # a : unordered adjacency matrix.
+  a = inv_p %*% unordered_a %*% p
   n = dim(a)[2]
   
-  # di : inverse degree matrix.
-  #di = diag(1 / degree(g))
-  di = .sparseDiagonal(n = n, x = 1 / degree(g)) # no NAs
-  
+  # unordered_di : unordered inverse degree matrix.
+  unordered_di = .sparseDiagonal(n = n, x = 1 / degree(g)) # no NAs
+  di = inv_p %*% unordered_di %*% p
   
   # t : lists of transition matrices, from 1 to l.
   t = Matrix(di %*% a, sparse = T)
@@ -79,7 +86,7 @@ der_algorithm <- function(g, L, k){
     # Step 1. Form mu_s.
     for(i in 1:k){
       s = which(partition[2, ] == i)
-      mu[i,] = apply(w[s, ], 2, function(r) {weighted.mean(r, w=degree(g)[s])})
+      mu[i, ] = apply(w[s, ], 2, function(r) {weighted.mean(r, w=degree(g)[s])})
     }
     
     # Update the old partition.
@@ -89,14 +96,9 @@ der_algorithm <- function(g, L, k){
     divergence_matrix = matrix(0, nrow = n, ncol = k)
     for (i in 1:n){
       for(j in 1:k){
-        
         divergence_matrix[i,j] = divergence(w[i, ], mu[j, ], n)
       }
-      #divergence_matrix[i, ] = apply(mu, 1, function(r) {divergence(w[i, ], r)})
     }
-    
-    #print(w[n, ])
-    #print(mu[,1])
     
     # Step 2b. Form the new partition.
     for (i in 1:n){
@@ -125,7 +127,13 @@ der_overlapping <- function(der_algorithm, g, k){
   mu = res[2][[1]]
   
   # pi : stationary measure of the random walk.
-  pi = degree(g) / norm(data.matrix(degree(g)), "1")
+  # As in the DER algorithm, 
+  permutation_v <- as.numeric(V(g)$name)
+  p = as(permutation_v, 'pMatrix')
+  inv_p = as(invPerm(permutation_v), 'pMatrix')
+  
+  unordered_pi = degree(g) / norm(data.matrix(degree(g)), "1")
+  pi = inv_p * unordered_pi
   
   # m : (n, k) matrix of probabilities that the walk started at P_s, given that it finished in i.
   m = matrix(F, nrow=n, ncol=k)
